@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "LevenSearch",
+  "version": "1.0",
+
+  "description": "Search for strings using levenshtein distance.",
+  "icons": {
+    "48": "icons/icon-32.png"
+  },
+
+  "permissions": [
+    "activeTab"
+  ],
+
+  "browser_action": {
+    "default_icon": "icons/icon-32.png",
+    "default_title": "LevenSearch",
+    "default_popup": "popup/search.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["levensearch.js"]
+    }
+  ]
+}
