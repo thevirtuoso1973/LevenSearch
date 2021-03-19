@@ -52,23 +52,30 @@
             .filter(e => e.childElementCount == 0 && e.textContent.length > 0)
     }
 
+    const markerClass = "levensearch-mark";
+
+    function markElement(e) {
+        let html = e.innerHTML;
+        e.innerHTML =
+            `<mark class="${markerClass}">`
+            + e.textContent
+            + '</mark>';
+    }
+
     function levenSearch(query, maxDist) {
         resetQuery();
 
-        window.alert("Search: " + query + ", dist: " + maxDist);
-
         let elements = getTextElements();
-
-        elements.forEach(e => {
-            if (lev(e.textContent, query) <= maxDist) {
-                console.log(e.textContent);
-            }
-        });
+        elements.filter(e => lev(e.textContent, query) <= maxDist).forEach(markElement);
     }
 
     function resetQuery() {
-        // TODO
-        console.log("Reset button.");
+        let toRemove = Array.from(
+            document.body.getElementsByClassName(markerClass)
+        );
+        toRemove.forEach(e => {
+            e.outerHTML = e.innerHTML;
+        });
     }
 
     /**

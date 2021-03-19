@@ -47,9 +47,13 @@ function listenForSubmit() {
     });
 
     document.addEventListener("click", (e) => {
-        if (e.target.matches(".button")) {
+        if (e.target.matches(".button-submit")) {
             browser.tabs.query({active: true, currentWindow: true})
                 .then(performSearch)
+                .catch(reportError);
+        } else if (e.target.matches(".button-reset")) {
+            browser.tabs.query({active: true, currentWindow: true})
+                .then(reset)
                 .catch(reportError);
         }
     });
