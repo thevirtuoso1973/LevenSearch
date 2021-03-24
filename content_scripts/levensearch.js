@@ -47,6 +47,16 @@
         return d[a.length][b.length]
     }
 
+    /*
+     * returns true if toCheck's Levenshtein distance is at most n from query
+     */
+    function isWithinDistance(query, toCheck, n) {
+        if (toCheck.length > query.length) {
+            return lev(query, toCheck.substr(0, query.length + n)) <= n;
+        }
+        return lev(query, toCheck) <= n;
+    }
+
     function getTextElements() {
         return Array.from(document.body.getElementsByTagName("*"))
             .filter(e => e.childElementCount == 0 && e.textContent.length > 0)
@@ -54,19 +64,40 @@
 
     const markerClass = "levensearch-mark";
 
-    function markElement(e) {
+    /*
+     * mark the substring from [i,j)
+     */
+    function markElement(e, i, j) {
         let html = e.innerHTML;
         e.innerHTML =
-            `<mark class="${markerClass}">`
-            + e.textContent
-            + '</mark>';
+            e.textContent.substring(0, i)
+            + `<mark class="${markerClass}">`
+            + e.textContent.substring(i,j)
+            + '</mark>'
+            + e.textContent.substring(j);
     }
 
     function levenSearch(query, maxDist) {
         resetQuery();
 
+        // maximum number of chars for a string to match
+        let maxLengthCheck = query.length + maxDist;
+
         let elements = getTextElements();
-        elements.filter(e => lev(e.textContent, query) <= maxDist).forEach(markElement);
+        console.log(`Searching through ${elements.length} elements.`);
+        elements.forEach(e => {
+            // TODO: properly iterate through text, may need to change
+            // getTextElements
+            let text = e.textContent;
+            let words = text.split(' ');
+            let numWords = words.length;
+            for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
+                if (isWithinDistance(query, text.substr(j), maxDist)) {
+                    markElement(e, j, j + maxLengthCheck);
+                }
+            }
+        });
+        console.log("Done searching.");
     }
 
     function resetQuery() {
