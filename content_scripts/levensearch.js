@@ -48,7 +48,7 @@
     }
 
     /*
-     * returns true if toCheck's Levenshtein distance is at most n from query
+     * returns true if some prefix of toCheck's Levenshtein distance is at most n from query
      */
     function isWithinDistance(query, toCheck, n) {
         if (toCheck.length > query.length) {
@@ -68,7 +68,6 @@
      * mark the substring from [i,j)
      */
     function markElement(e, i, j) {
-        let html = e.innerHTML;
         e.innerHTML =
             e.textContent.substring(0, i)
             + `<mark class="${markerClass}">`
@@ -77,27 +76,50 @@
             + e.textContent.substring(j);
     }
 
+    let currQuery = "";
+    let matches = [];
+    let i = 0;
+
+    /*
+     * finds the next match, wrapping around if needed
+     */
+    function findNext() {
+        if (!window.find(matches[i], 0, 0, 1, 0, 0, 0)) {
+            // if it's false, we may have reached last match,
+            // so move back to the start
+            while (window.find(matches[i], 0, 1, 0, 0, 0, 0)) continue;
+        }
+        i = (i + 1) % matches.length;
+    }
+
     function levenSearch(query, maxDist) {
-        resetQuery();
+        if (query === "") {
+            return;
+        }
+        if (query === currQuery) {
+            findNext();
+            return;
+        }
+
+        currQuery = query;
+        matches = [];
+        i = 0;
 
         // maximum number of chars for a string to match
         let maxLengthCheck = query.length + maxDist;
 
-        let elements = getTextElements();
-        console.log(`Searching through ${elements.length} elements.`);
-        elements.forEach(e => {
-            // TODO: properly iterate through text, may need to change
-            // getTextElements
-            let text = e.textContent;
-            let words = text.split(' ');
-            let numWords = words.length;
-            for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
-                if (isWithinDistance(query, text.substr(j), maxDist)) {
-                    markElement(e, j, j + maxLengthCheck);
-                }
+        let text = document.body.innerText.trim();
+        let words = text.split(' ');
+        let numWords = words.length;
+        for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
+            let currStr = text.substr(j, maxLengthCheck);
+            if (isWithinDistance(query, text.substr(j), maxDist)) {
+                matches.push(currStr);
             }
-        });
-        console.log("Done searching.");
+        }
+
+        findNext();
+        console.log(matches);
     }
 
     function resetQuery() {
