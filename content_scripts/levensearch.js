@@ -1,4 +1,54 @@
 (function() {
+    class LevenshteinAutomaton {
+        constructor(input, k) {
+            this.word = input;
+            this.maxDistance = k;
+
+            this.start = "0|0" // state format: "numberOfCharsConsumed|numberOfErrors"
+            // states = {(i, j): 0 <= i <= len, 0 <= j <= k}
+
+            let transition = {};
+            for (let i = 0; i < this.word.length; ++i) {
+                for (let j = 0; j < this.maxDistance; ++j) {
+                    let currState = i.toString() + "|" + j.toString();
+
+                    transition[currState + '-' + "any"] = [
+                        i.toString() + "|" + (j+1).toString(),
+                        (i+1).toString() + "|" + (j+1).toString()
+                    ]
+                    transition[currState + '-' + "epsilon"] = [
+                        (i+1).toString() + "|" + (j+1).toString()
+                    ]
+                    transition[currState + '-' + this.word[i]] = [
+                        (i+1).toString() + '|' + j.toString()
+                    ]
+                }
+            }
+
+            for (let i = 0; i < this.word.length; ++i) {
+                let currState = i.toString() + "|" + this.maxDistance.toString();
+                transition[currState + '-' + this.word[i]] = [
+                    (i+1).toString() + '|' + j.toString()
+                ]
+            }
+            for (let j = 0; j < this.maxDistance; ++j) {
+                let currState = this.word.length.toString() + "|" + j.toString();
+                transition[currState + '-' + "any"] = [
+                    i.toString() + "|" + (j+1).toString(),
+                ]
+            }
+            this.transition = transition;
+        }
+
+        isFinal(state) {
+            return Number(state.split('|')[0]) === this.word.length;
+        }
+
+        isAccepted(string) {
+            // TODO: implement return true if string is in language
+        }
+    }
+
     /**
      * Check and set a global guard variable.
      * If this content script is injected into the same page again,
@@ -17,7 +67,7 @@
     }
 
     /*
-     * computes the levenshtein distance between a,b
+     * returns the edit distance matrix
      */
     function lev(a, b) {
         let d = [];
@@ -44,36 +94,28 @@
                               d[i-1][j-1] + cost);
             }
         }
-        return d[a.length][b.length]
+        return d
     }
 
     /*
-     * returns true if some prefix of toCheck's Levenshtein distance is at most n from query
+     * returns the end index of a prefix of toCheck with Levenshtein distance at most n from query.
+     * -1 if not found
+     * TODO: use http://blog.notdot.net/2010/07/Damn-Cool-Algorithms-Levenshtein-Automata
+     *
      */
-    function isWithinDistance(query, toCheck, n) {
-        if (toCheck.length > query.length) {
-            return lev(query, toCheck.substr(0, query.length + n)) <= n;
+    function getPrefixWithin(query, toCheck, n) {
+        let matrix = lev(query, toCheck.substr(0, query.length + n));
+        for (let x = 1; x <= query.length + n && x < matrix[query.length].length; ++x) {
+            if (matrix[query.length][x] <= n) {
+                return x;
+            }
         }
-        return lev(query, toCheck) <= n;
+        return 0;
     }
 
     function getTextElements() {
         return Array.from(document.body.getElementsByTagName("*"))
             .filter(e => e.childElementCount == 0 && e.textContent.length > 0)
-    }
-
-    const markerClass = "levensearch-mark";
-
-    /*
-     * mark the substring from [i,j)
-     */
-    function markElement(e, i, j) {
-        e.innerHTML =
-            e.textContent.substring(0, i)
-            + `<mark class="${markerClass}">`
-            + e.textContent.substring(i,j)
-            + '</mark>'
-            + e.textContent.substring(j);
     }
 
     let currQuery = "";
@@ -105,7 +147,7 @@
         matches = [];
         i = 0;
 
-        // maximum number of chars for a string to match
+        // maximum possible number of chars for a string to match
         let maxLengthCheck = query.length + maxDist;
 
         let text = document.body.innerText.trim();
@@ -113,8 +155,9 @@
         let numWords = words.length;
         for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
             let currStr = text.substr(j, maxLengthCheck);
-            if (isWithinDistance(query, text.substr(j), maxDist)) {
-                matches.push(currStr);
+            let endIndex = getPrefixWithin(query, text.substr(j), maxDist);
+            if (endIndex > 0) {
+                matches.push(currStr.substr(0, endIndex));
             }
         }
 
@@ -123,12 +166,12 @@
     }
 
     function resetQuery() {
-        let toRemove = Array.from(
-            document.body.getElementsByClassName(markerClass)
-        );
-        toRemove.forEach(e => {
-            e.outerHTML = e.innerHTML;
-        });
+        // discards the highlight
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        } else if (document.selection) {
+            document.selection.empty();
+        }
     }
 
     /**
@@ -141,5 +184,4 @@
             resetQuery();
         }
     });
-
 })();
