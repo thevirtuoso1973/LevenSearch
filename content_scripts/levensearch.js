@@ -28,13 +28,13 @@
             for (let i = 0; i < this.word.length; ++i) {
                 let currState = i.toString() + "|" + this.maxDistance.toString();
                 transition[currState + '-' + this.word[i]] = [
-                    (i+1).toString() + '|' + j.toString()
+                    (i+1).toString() + '|' + this.maxDistance.toString()
                 ]
             }
             for (let j = 0; j < this.maxDistance; ++j) {
                 let currState = this.word.length.toString() + "|" + j.toString();
                 transition[currState + '-' + "any"] = [
-                    i.toString() + "|" + (j+1).toString(),
+                    this.word.length.toString() + "|" + (j+1).toString(),
                 ]
             }
             this.transition = transition;
@@ -44,8 +44,45 @@
             return Number(state.split('|')[0]) === this.word.length;
         }
 
-        isAccepted(string) {
-            // TODO: implement return true if string is in language
+        /*
+         * returns the first accepted prefix of string, or "" if none are accepted
+         */
+        getAcceptedPrefix(string, log) {
+            let currStates = [[this.start, 0]];
+
+            while (currStates.length > 0
+                   && currStates.filter(s => this.isFinal(s[0])).length == 0) {
+                let currCount = currStates.length;
+                for (let i = 0; i < currCount; ++i) {
+                    let state = currStates.shift(); // pop from front
+                    if (this.isFinal(state[0])) {
+                        return string.substr(0, state[1]);
+                    }
+
+                    if (state[0] + '-' + "epsilon" in this.transition) {
+                        currStates.push(
+                            ...this.transition[state[0] + '-' + "epsilon"].map(s => [s, state[1]])
+                        );
+                    }
+                    if (state[0] + '-' + "any" in this.transition) {
+                        currStates.push(
+                            ...this.transition[state[0] + '-' + "any"].map(s => [s, state[1] + 1])
+                        );
+                    }
+                    if (state[0] + '-' + string[state[1]] in this.transition) {
+                        currStates.push(
+                            ...this.transition[state[0] + '-' + string[state[1]]].map(s => [s, state[1] + 1])
+                        );
+                    }
+                }
+            }
+
+            for (let state of currStates) {
+                if (this.isFinal(state[0])) {
+                    return string.substr(0, state[1]);
+                }
+            }
+            return "";
         }
     }
 
@@ -119,6 +156,7 @@
     }
 
     let currQuery = "";
+    let currDist = 1;
     let matches = [];
     let i = 0;
 
@@ -138,12 +176,12 @@
         if (query === "") {
             return;
         }
-        if (query === currQuery) {
+        if (query === currQuery && maxDist === currDist) {
             findNext();
             return;
         }
 
-        resetQuery(query);
+        resetQuery(query, maxDist);
 
         // maximum possible number of chars for a string to match
         let maxLengthCheck = query.length + maxDist;
@@ -153,8 +191,10 @@
         let numWords = words.length;
 
         let timeBefore = performance.now();
+
+        let automaton = new LevenshteinAutomaton(query, maxDist);
         for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
-            let prefix = getPrefixWithin(query, text.substr(j), maxDist);
+            let prefix = automaton.getAcceptedPrefix(text.substr(j));
             if (prefix !== "") {
                 matches.push(prefix);
             }
@@ -166,8 +206,9 @@
         findNext();
     }
 
-    function resetQuery(newQ) {
+    function resetQuery(newQ, newDist) {
         currQuery = newQ;
+        currDist = newDist;
         matches = [];
         i = 0;
 
