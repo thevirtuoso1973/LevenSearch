@@ -143,9 +143,7 @@
             return;
         }
 
-        currQuery = query;
-        matches = [];
-        i = 0;
+        resetQuery(query);
 
         // maximum possible number of chars for a string to match
         let maxLengthCheck = query.length + maxDist;
@@ -153,6 +151,8 @@
         let text = document.body.innerText.trim();
         let words = text.split(' ');
         let numWords = words.length;
+
+        let timeBefore = performance.now();
         for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
             let currStr = text.substr(j, maxLengthCheck);
             let endIndex = getPrefixWithin(query, text.substr(j), maxDist);
@@ -160,12 +160,18 @@
                 matches.push(currStr.substr(0, endIndex));
             }
         }
+        let timeAfter = performance.now();
 
-        findNext();
+        console.log(`Search and checking took ${timeAfter-timeBefore}ms`);
         console.log(matches);
+        findNext();
     }
 
-    function resetQuery() {
+    function resetQuery(newQ) {
+        currQuery = newQ;
+        matches = [];
+        i = 0;
+
         // discards the highlight
         if (window.getSelection) {
             window.getSelection().removeAllRanges();
@@ -181,7 +187,7 @@
         if (message.command === "search") {
             levenSearch(message.query, message.maxDistance);
         } else if (message.command === "reset") {
-            resetQuery();
+            resetQuery("");
         }
     });
 })();
