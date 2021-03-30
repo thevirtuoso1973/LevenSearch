@@ -98,8 +98,8 @@
     }
 
     /*
-     * returns the end index of a prefix of toCheck with Levenshtein distance at most n from query.
-     * -1 if not found
+     * returns some prefix of toCheck with Levenshtein distance at most n from query.
+     * empty string if none satisfy.
      * TODO: use http://blog.notdot.net/2010/07/Damn-Cool-Algorithms-Levenshtein-Automata
      *
      */
@@ -107,10 +107,10 @@
         let matrix = lev(query, toCheck.substr(0, query.length + n));
         for (let x = 1; x <= query.length + n && x < matrix[query.length].length; ++x) {
             if (matrix[query.length][x] <= n) {
-                return x;
+                return toCheck.substr(0, x);
             }
         }
-        return 0;
+        return "";
     }
 
     function getTextElements() {
@@ -154,10 +154,9 @@
 
         let timeBefore = performance.now();
         for (let i = 0, j = 0; j < text.length; j += words[i++].length + 1) {
-            let currStr = text.substr(j, maxLengthCheck);
-            let endIndex = getPrefixWithin(query, text.substr(j), maxDist);
-            if (endIndex > 0) {
-                matches.push(currStr.substr(0, endIndex));
+            let prefix = getPrefixWithin(query, text.substr(j), maxDist);
+            if (prefix !== "") {
+                matches.push(prefix);
             }
         }
         let timeAfter = performance.now();
