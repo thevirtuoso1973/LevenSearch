@@ -7,12 +7,21 @@ function listenForSubmit() {
         return document.getElementsByName("query")[0].value;
     }
 
+    function getDistance() {
+        return document.getElementsByName("distance")[0].value;
+    }
+
+    function resetInputs() {
+        document.getElementsByName("query")[0].value = "";
+        document.getElementsByName("distance")[0].value = "1";
+    }
+
     /**
      * perform a search using the query
      */
     function performSearch(tabs) {
         let searchQuery = getQuery();
-        let levenshtein = 1;
+        let levenshtein = getDistance();
 
         browser.tabs.sendMessage(tabs[0].id, {
             command: "search",
@@ -26,6 +35,7 @@ function listenForSubmit() {
      * send a "reset" message to the content script in the active tab.
      */
     function reset(tabs) {
+        resetInputs();
         browser.tabs.sendMessage(tabs[0].id, {
             command: "reset"
         });

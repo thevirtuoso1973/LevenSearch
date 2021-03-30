@@ -7,7 +7,12 @@
 
   <body>
     <div id="popup-content">
-      <input type="text" id="query" name="query" autofocus="autofocus">
+      <label for="query">Pattern:</label>
+      <input type="text" id="query" name="query" autofocus="autofocus" required>
+      <label for="distance">Levenshtein Distance:</label>
+      <input type="number" id="distance" name="distance" required min="0" value="1">
+      <br>
+      <br>
       <input class="button-submit" type="submit" value="Submit">
       <input class="button-reset" type="reset" value="Reset">
     </div>
