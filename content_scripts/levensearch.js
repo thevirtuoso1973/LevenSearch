@@ -137,7 +137,6 @@
     /*
      * returns some prefix of toCheck with Levenshtein distance at most n from query.
      * empty string if none satisfy.
-     * TODO: use http://blog.notdot.net/2010/07/Damn-Cool-Algorithms-Levenshtein-Automata
      *
      */
     function getPrefixWithin(query, toCheck, n) {
