@@ -173,11 +173,11 @@
 
     function levenSearch(query, maxDist) {
         if (query === "") {
-            return;
+            return "";
         }
         if (query === currQuery && maxDist === currDist) {
             findNext();
-            return;
+            return "";
         }
 
         resetQuery(query, maxDist);
@@ -200,9 +200,10 @@
         }
         let timeAfter = performance.now();
 
-        console.log(`Search and checking took ${timeAfter-timeBefore}ms`);
-        console.log(matches);
         findNext();
+
+        console.log(matches);
+        return `Found ${matches.length} matches in ${timeAfter-timeBefore}ms`;
     }
 
     function resetQuery(newQ, newDist) {
@@ -224,7 +225,8 @@
      */
     browser.runtime.onMessage.addListener((message) => {
         if (message.command === "search") {
-            levenSearch(message.query, message.maxDistance);
+            return Promise.resolve(levenSearch(message.query,
+                                               message.maxDistance));
         } else if (message.command === "reset") {
             resetQuery("");
         }

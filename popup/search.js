@@ -20,6 +20,7 @@ function listenForSubmit() {
      * perform a search using the query
      */
     function performSearch(tabs) {
+        let textElem = document.getElementById("message");
         let searchQuery = getQuery();
         let levenshtein = getDistance();
 
@@ -27,6 +28,10 @@ function listenForSubmit() {
             command: "search",
             query: searchQuery,
             maxDistance: levenshtein
+        }).then(m => {
+            if (m) {
+                textElem.textContent = m;
+            }
         });
     }
 

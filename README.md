@@ -1,3 +1,3 @@
 # LevenSearch
 
-Search websites. Like Ctrl-F but highlights results within some levenshtein distance.
+Search websites like Ctrl-F but highlights results within some levenshtein distance.
