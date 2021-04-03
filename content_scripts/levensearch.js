@@ -186,7 +186,7 @@
         let maxLengthCheck = query.length + maxDist;
 
         let text = document.body.innerText.trim();
-        let words = text.split(' ');
+        let words = text.split(/\s/);
         let numWords = words.length;
 
         let timeBefore = performance.now();
